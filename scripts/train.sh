@@ -1,11 +1,11 @@
 #! /bin/bash
-caffe_dir=$HOME/Libraries/caffe
+caffe_dir=$HOME/3rdparty/caffe
 
 if [ ! -d results ]; then
     mkdir results
 fi
-if [ ! -f data/image_mean.binaryproto ]; then
-    $caffe_dir/build/tools/compute_image_mean data/image_train.lmdb data/image_mean.binaryproto
+if [ ! -f data/image_occ_mean.binaryproto ]; then
+    $caffe_dir/build/tools/compute_image_mean data/image_occ_train.lmdb data/image_occ_mean.binaryproto
 fi
 
 cd results
@@ -16,6 +16,6 @@ cd $1_$fn
 cp ../../models/$1/* ./
 mkdir snapshots
 mkdir weights
-$caffe_dir/python/draw_net.py train_test.prototxt net.png
+#$caffe_dir/python/draw_net.py train_test.prototxt net.png
 nohup $caffe_dir/build/tools/caffe train \
     -solver=../../models/$1/solver.prototxt &

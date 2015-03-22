@@ -5,11 +5,11 @@ layers {
   top: "data"
   data_param {
     backend: LMDB
-    source: "../../data/image_train.lmdb"
+    source: "../../data/image_occ_train.lmdb"
     batch_size: 256
   }
   transform_param {
-    mean_file: "../../data/image_mean.binaryproto"
+    mean_file: "../../data/image_occ_mean.binaryproto"
   }
 }
 layers {
