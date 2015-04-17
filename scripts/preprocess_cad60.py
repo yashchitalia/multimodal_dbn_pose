@@ -4,7 +4,8 @@
 import os
 import numpy as np
 import pickle as pkl
-
+import scipy.io as sio
+import itertools
 
 def remove_orientations_and_make_2d(joint_row):
     """As explained, this function removes all the orientation information and
@@ -39,9 +40,10 @@ def extract_images_and_matricize_keypoints():
     matricize the keypoint file associated with it """
     dat_dir = 'data/cad60_dataset'
     try: 
-        joints = pkl.load(open(dat_dar+'/joints.p', 'rb')) 
+        joints = pkl.load(open(dat_dir+'/joints.p', 'rb')) 
     except:
         joints = []
+    mat_joints = []
     subdir_list = []
     for filename in os.listdir(dat_dir):
         if os.path.isdir(dat_dir+'/'+filename):
@@ -57,8 +59,13 @@ def extract_images_and_matricize_keypoints():
             for filename in os.listdir(dat_dir+'/'+subdir):
                 file_num = filename[filename.find("_")+1:filename.find(".")]
                 file_type = filename[0] #R(GB) or D
+                #Uncomment following line(and comment line below that one) 
+                #if USING MULTIPLE DIRECTORIES from the CAD 60 dataset.
+                #os.rename(dat_dir+'/'+subdir+'/'+filename,
+                        #dat_dir+'/images/'+subdir+file_num+'_'+file_type+'.jpg') 
                 os.rename(dat_dir+'/'+subdir+'/'+filename,
-                        dat_dir+'/images/'+subdir+file_num+'_'+file_type+'.jpg') 
+                        dat_dir+'/images/'+file_num+'_'+file_type+'.jpg') 
+ 
             os.rmdir(dat_dir+'/'+subdir)
 
     if not (subdir == 'images' or subdir == 'mark' or subdir == 'crop'
@@ -70,7 +77,6 @@ def extract_images_and_matricize_keypoints():
             for line in lines_list:
                 joint_row = line.split(',')[:-1]
                 if joint_row:
-                    joint_row[0] = subdir+joint_row[0]
                     try:
                         joint_row[1:] = (
                             [float(joint_str) for joint_str in joint_row[1:]])
@@ -80,12 +86,20 @@ def extract_images_and_matricize_keypoints():
                         return
                     joint_row[1:] = (
                             remove_orientations_and_make_2d(joint_row[1:]))
+                    #MATLAB Stuff
+                    chain = itertools.chain(*joint_row)#Flatten list for MATLAB
+                    chain = list(chain)
+                    chain[0] = float(chain[0])
+                    mat_joints.append(chain)
+                    #Pickle Stuff
+                    #joint_row[0] = subdir+joint_row[0]#UNCOMMENT if multiple 
+                    #directories of CAD60 dataset
                     joints.append(joint_row)
                 else:
                     continue
 
         pkl.dump(joints, open(dat_dir+'/joints.p', 'wb'))
-
+        sio.savemat(dat_dir+'/joints.mat', {'joints':mat_joints})#Store as mat
 
 if __name__ == '__main__':
     extract_images_and_matricize_keypoints()
