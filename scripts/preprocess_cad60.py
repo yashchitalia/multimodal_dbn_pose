@@ -87,9 +87,9 @@ def extract_images_and_matricize_keypoints():
                     joint_row[1:] = (
                             remove_orientations_and_make_2d(joint_row[1:]))
                     #MATLAB Stuff
-                    chain = itertools.chain(*joint_row)#Flatten list for MATLAB
-                    chain = list(chain)
-                    chain[0] = float(chain[0])
+                    chain_mix = list(joint_row)
+                    chain_mix[0] = [float(chain_mix[0])]
+                    chain = [item for sublist in chain_mix for item in sublist]
                     mat_joints.append(chain)
                     #Pickle Stuff
                     #joint_row[0] = subdir+joint_row[0]#UNCOMMENT if multiple 
