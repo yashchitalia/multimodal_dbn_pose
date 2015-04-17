@@ -84,6 +84,7 @@ def save_crop_images_and_joints():
     img_dir = 'data/cad60_dataset/images'
     #To store in matlab
     rgb_image_mat = []
+    rgb_occ_mat = []
     d_image_mat = []
 
     for joint in joints:
@@ -102,10 +103,18 @@ def save_crop_images_and_joints():
             cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_D.jpg', img_d)
             cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_OCC.jpg', img_occ)
 
-            #Flatten the RGB image to be stored as mat file
+            #Flatten the RGB original(and resized) image to be stored as mat file
+            img_r = cv.cvtColor(img_r, cv.COLOR_BGR2GRAY)
+            array_img_r = np.array(img_r)
+            flat_img_r = np.ravel(array_img_r)
+            rgb_image_mat.append(list(flat_img_r))
+
+
+            #Flatten the RGB occluded image to be stored as mat file
+            img_occ = cv.cvtColor(img_occ, cv.COLOR_BGR2GRAY)
             array_img_occ = np.array(img_occ)
             flat_img_occ = np.ravel(array_img_occ)
-            rgb_image_mat.append(list(flat_img_occ))
+            rgb_occ_mat.append(list(flat_img_occ))
 
             #Flatten the D image to be stored as mat file
             img_d = cv.cvtColor(img_d, cv.COLOR_BGR2GRAY)
@@ -121,7 +130,8 @@ def save_crop_images_and_joints():
             joint_pos = joint_pos.flatten()
             np.save('data/cad60_dataset/joint/'+joint[0], joint_pos)
 
-    sio.savemat('data/cad60_dataset/rgb_occ.mat', {'rgb_occ':rgb_image_mat})#Store as mat
+    sio.savemat('data/cad60_dataset/rgb_orig.mat', {'rgb_orig':rgb_image_mat})#Store as mat
+    sio.savemat('data/cad60_dataset/rgb_occ.mat', {'rgb_occ':rgb_occ_mat})#Store as mat
     sio.savemat('data/cad60_dataset/d_occ.mat', {'d_occ':d_image_mat})#Store as mat
 
 
