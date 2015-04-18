@@ -22,7 +22,8 @@ close all
 clc
 
 maxepoch=10; %Number of epochs 
-numhid=8100; numpen=4050; numpen2=2000; numopen=500;
+numhid=8100; numpen=4050; numpen2=2000; numopen=30;%RGB
+%numhid=2500; numpen=1250; numpen2=700; numopen=100; %Depth
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
 % converter; 

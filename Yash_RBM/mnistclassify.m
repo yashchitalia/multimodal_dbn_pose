@@ -20,11 +20,11 @@
 clear all
 close all
 
-maxepoch=50; 
-numhid=500; numpen=500; numpen2=2000; 
+maxepoch=10; 
+numhid=2500; numpen=1000; numpen2=500; 
 
-fprintf(1,'Converting Raw files into Matlab format \n');
-converter; 
+% fprintf(1,'Converting Raw files into Matlab format \n');
+% converter; 
 
 fprintf(1,'Pretraining a deep autoencoder. \n');
 fprintf(1,'The Science paper used 50 epochs. This uses %3i \n', maxepoch);

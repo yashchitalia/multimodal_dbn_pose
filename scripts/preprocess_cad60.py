@@ -22,6 +22,7 @@ def remove_orientations_and_make_2d(joint_row):
         del joint_row[:4] 
 
     joint_row_2d = []
+    joint_row_norm = []
     for i in range(15):
         x, y, z = joint_row_without_orientations[:3] 
         del joint_row_without_orientations[:3]
@@ -30,8 +31,8 @@ def remove_orientations_and_make_2d(joint_row):
         Y = (125.5357201011431 + 0.0002153447766 * x - 0.1184874093530 * y 
                 - 0.0022134485957 * z)
         joint_row_2d.append([X,Y])
-
-    return joint_row_2d
+        joint_row_norm.append([X/320, Y/240])#Normalized
+    return joint_row_2d, joint_row_norm
 
 
 def extract_images_and_matricize_keypoints():
@@ -84,10 +85,12 @@ def extract_images_and_matricize_keypoints():
                         print "[ERROR] Could not convert string to float"
                         print joint_row
                         return
-                    joint_row[1:] = (
+                
+                    joint_row_norm = list(joint_row)
+                    joint_row[1:], joint_row_norm[1:] = (
                             remove_orientations_and_make_2d(joint_row[1:]))
                     #MATLAB Stuff
-                    chain_mix = list(joint_row)
+                    chain_mix = list(joint_row_norm)
                     chain_mix[0] = [float(chain_mix[0])]
                     chain = [item for sublist in chain_mix for item in sublist]
                     mat_joints.append(chain)

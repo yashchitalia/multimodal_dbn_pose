@@ -36,12 +36,13 @@ N = size(XX,1);
   w1probs = 1./(1 + exp(-XX*w1)); w1probs = [w1probs  ones(N,1)];
   w2probs = 1./(1 + exp(-w1probs*w2)); w2probs = [w2probs ones(N,1)];
   w3probs = 1./(1 + exp(-w2probs*w3)); w3probs = [w3probs  ones(N,1)];
+  targetout = 1./(1 + exp(-w3probs*w_class));
+%   targetout = exp(w3probs*w_class);
+%   targetout = targetout./repmat(sum(targetout,2),1,10);
+  f = -(1/N)*sum(sum( target(:,1:end).*log(targetout) + ...
+      (1-target(:,1:end)).*log(1-targetout))) ;
 
-  targetout = exp(w3probs*w_class);
-  targetout = targetout./repmat(sum(targetout,2),1,10);
-  f = -sum(sum( target(:,1:end).*log(targetout))) ;
-
-IO = (targetout-target(:,1:end));
+IO = (1/N)*(targetout-target(:,1:end));
 Ix_class=IO; 
 dw_class =  w3probs'*Ix_class; 
 

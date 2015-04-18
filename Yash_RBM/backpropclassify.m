@@ -34,7 +34,7 @@ N=numcases;
 w1=[vishid; hidrecbiases];
 w2=[hidpen; penrecbiases];
 w3=[hidpen2; penrecbiases2];
-w_class = 0.1*randn(size(w3,2)+1,10);
+w_class = 0.1*randn(size(w3,2)+1,30);
  
 
 %%%%%%%%%% END OF PREINITIALIZATIO OF WEIGHTS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,7 +43,7 @@ l1=size(w1,1)-1;
 l2=size(w2,1)-1;
 l3=size(w3,1)-1;
 l4=size(w_class,1)-1;
-l5=10; 
+l5=30; 
 test_err=[];
 train_err=[];
 
@@ -63,60 +63,61 @@ N=numcases;
   w1probs = 1./(1 + exp(-data*w1)); w1probs = [w1probs  ones(N,1)];
   w2probs = 1./(1 + exp(-w1probs*w2)); w2probs = [w2probs ones(N,1)];
   w3probs = 1./(1 + exp(-w2probs*w3)); w3probs = [w3probs  ones(N,1)];
-  targetout = exp(w3probs*w_class);
-  targetout = targetout./repmat(sum(targetout,2),1,10);
+  targetout = 1./(1 + exp(-w3probs*w_class));
+%   targetout = targetout./repmat(sum(targetout,2),1,30);
 
-  [I J]=max(targetout,[],2);
-  [I1 J1]=max(target,[],2);
-  counter=counter+length(find(J==J1));
-  err_cr = err_cr- sum(sum( target(:,1:end).*log(targetout))) ;
+%   [I J]=max(targetout,[],2);
+%   [I1 J1]=max(target,[],2);
+%   counter=counter+length(find(J==J1));
+%   err_cr = err_cr- sum(sum( target(:,1:end).*log(targetout))) ;
+  err_cr = err_cr +  1/N*sum(sum( (targetout(:,1:end)-target).^2 ));
  end
- train_err(epoch)=(numcases*numbatches-counter);
+
  train_crerr(epoch)=err_cr/numbatches;
 
 %%%%%%%%%%%%%% END OF COMPUTING TRAINING MISCLASSIFICATION ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%% COMPUTE TEST MISCLASSIFICATION ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-err=0;
-err_cr=0;
-counter=0;
-[testnumcases testnumdims testnumbatches]=size(testbatchdata);
-N=testnumcases;
-for batch = 1:testnumbatches
-  data = [testbatchdata(:,:,batch)];
-  target = [testbatchtargets(:,:,batch)];
-  data = [data ones(N,1)];
-  w1probs = 1./(1 + exp(-data*w1)); w1probs = [w1probs  ones(N,1)];
-  w2probs = 1./(1 + exp(-w1probs*w2)); w2probs = [w2probs ones(N,1)];
-  w3probs = 1./(1 + exp(-w2probs*w3)); w3probs = [w3probs  ones(N,1)];
-  targetout = exp(w3probs*w_class);
-  targetout = targetout./repmat(sum(targetout,2),1,10);
-
-  [I J]=max(targetout,[],2);
-  [I1 J1]=max(target,[],2);
-  counter=counter+length(find(J==J1));
-  err_cr = err_cr- sum(sum( target(:,1:end).*log(targetout))) ;
-end
- test_err(epoch)=(testnumcases*testnumbatches-counter);
- test_crerr(epoch)=err_cr/testnumbatches;
- fprintf(1,'Before epoch %d Train # misclassified: %d (from %d). Test # misclassified: %d (from %d) \t \t \n',...
-            epoch,train_err(epoch),numcases*numbatches,test_err(epoch),testnumcases*testnumbatches);
+% err=0;
+% err_cr=0;
+% counter=0;
+% [testnumcases testnumdims testnumbatches]=size(testbatchdata);
+% N=testnumcases;
+% for batch = 1:testnumbatches
+%   data = [testbatchdata(:,:,batch)];
+%   target = [testbatchtargets(:,:,batch)];
+%   data = [data ones(N,1)];
+%   w1probs = 1./(1 + exp(-data*w1)); w1probs = [w1probs  ones(N,1)];
+%   w2probs = 1./(1 + exp(-w1probs*w2)); w2probs = [w2probs ones(N,1)];
+%   w3probs = 1./(1 + exp(-w2probs*w3)); w3probs = [w3probs  ones(N,1)];
+%   targetout = exp(w3probs*w_class);
+%   targetout = targetout./repmat(sum(targetout,2),1,10);
+% 
+%   [I J]=max(targetout,[],2);
+%   [I1 J1]=max(target,[],2);
+%   counter=counter+length(find(J==J1));
+%   err_cr = err_cr- sum(sum( target(:,1:end).*log(targetout))) ;
+% end
+%  test_err(epoch)=(testnumcases*testnumbatches-counter);
+%  test_crerr(epoch)=err_cr/testnumbatches;
+%  fprintf(1,'Before epoch %d Train # misclassified: %d (from %d). Test # misclassified: %d (from %d) \t \t \n',...
+%             epoch,train_err(epoch),numcases*numbatches,test_err(epoch),testnumcases*testnumbatches);
 
 %%%%%%%%%%%%%% END OF COMPUTING TEST MISCLASSIFICATION ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  tt=0;
- for batch = 1:numbatches/10
+ for batch = 1:numbatches/6
  fprintf(1,'epoch %d batch %d\r',epoch,batch);
 
 %%%%%%%%%%% COMBINE 10 MINIBATCHES INTO 1 LARGER MINIBATCH %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  tt=tt+1; 
  data=[];
  targets=[]; 
- for kk=1:10
+ for kk=1:6
   data=[data 
-        batchdata(:,:,(tt-1)*10+kk)]; 
+        batchdata(:,:,(tt-1)*6+kk)]; 
   targets=[targets
-        batchtargets(:,:,(tt-1)*10+kk)];
+        batchtargets(:,:,(tt-1)*6+kk)];
  end 
 
 %%%%%%%%%%%%%%% PERFORM CONJUGATE GRADIENT WITH 3 LINESEARCHES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -153,8 +154,8 @@ end
  end
 
  save mnistclassify_weights w1 w2 w3 w_class
- save mnistclassify_error test_err test_crerr train_err train_crerr;
-
+%  save mnistclassify_error test_err test_crerr train_err train_crerr;
+ save mnistclassify_error train_err train_crerr;
 end
 
 

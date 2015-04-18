@@ -14,25 +14,30 @@
 % Code modified for pose estimation autoencoders by Yash Chitalia
 
 
-rgbdata=[]; 
-load rgb_occ; rgbdata = [rgbdata; rgb_occ];
-rgbdata = rgbdata/255;
+rgborig=[]; 
+targets=[]; 
+load rgb_orig; rgborig = [rgborig; rgb_orig];
+load joints; 
+targets = [targets; joints(:, 2:end)]; 
+rgborig = rgborig/255;
 
-totnum=size(rgbdata,1);
+totnum=size(rgborig,1);
 fprintf(1, 'Size of the training dataset= %5d \n', totnum);
 
 rand('state',0); %so we know the permutation of the training data
 randomorder=randperm(totnum);
 
 numbatches=totnum/100;
-numdims  =  size(rgbdata,2);
+numdims  =  size(rgborig,2);
 batchsize = 100;
 batchdata = zeros(batchsize, numdims, numbatches);
+batchtargets = zeros(batchsize, 30, numbatches);
 
 for b=1:numbatches
-  batchdata(:,:,b) = rgbdata(randomorder(1+(b-1)*batchsize:b*batchsize), :);
+  batchdata(:,:,b) = rgborig(randomorder(1+(b-1)*batchsize:b*batchsize), :);
+  batchtargets(:,:,b) = targets(randomorder(1+(b-1)*batchsize:b*batchsize), :);
 end;
-clear rgbdata;
+clear rgborig;
 
 %%% Reset random seeds 
 rand('state',sum(100*clock)); 
