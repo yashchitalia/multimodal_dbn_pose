@@ -13,14 +13,14 @@ def add_random_occlusion(img_r, joint_pos, shape):
     Using RGB image and the position of the joints, we will arrive at a
     (partly) random rectangle that we apply to the img_r image and then return
     it."""
-    joint_pos *= np.array([shape[0], shape[1]])
-    min_x = int(np.min(joint_pos[:, 0]))
-    min_y = int(np.min(joint_pos[:, 1]))
-    max_x = int(np.max(joint_pos[:, 0]))
-    max_y = int(np.max(joint_pos[:, 1]))
+    joint_unnorm = joint_pos*np.array([shape[0], shape[1]])
+    min_x = int(np.min(joint_unnorm[:, 0]))
+    min_y = int(np.min(joint_unnorm[:, 1]))
+    max_x = int(np.max(joint_unnorm[:, 0]))
+    max_y = int(np.max(joint_unnorm[:, 1]))
     #Randomize the shit out of this
     min_x = random.randint(0, min_x)
-    min_y = random.randint(min_y, (max_y - min_y)/2)
+    min_y = random.randint(min_y, min_y + (max_y - min_y)/2)
     max_x = random.randint(max_x, int(shape[0] - 1))
     max_y = random.randint(max_y, int(shape[1] - 1))
     color = (random.randint(0, 255), random.randint(0, 255), 
@@ -28,6 +28,28 @@ def add_random_occlusion(img_r, joint_pos, shape):
     cv.rectangle(img_r, (min_x, min_y), (max_x, max_y), color,
                 thickness = -1)
     return img_r
+
+def depth_random_occlusion(img_d, joint_pos, shape):
+    """Add random occlusion to imitate the pressure map of a person.
+    Using depth image and the position of the joints, we will arrive at a
+    (partly) random rectangle that we apply to the img_d image and then return
+    it."""
+    joint_unnorm = joint_pos*np.array([shape[0], shape[1]])
+    random_joints_list = random.sample(joint_unnorm, random.randint(1, 3))
+    for random_joint in random_joints_list:
+        min_x = int(random_joint[0] - (shape[0]/20))
+        min_y = int(random_joint[1] - (shape[1]/20))
+        max_x = int(random_joint[0] + (shape[0]/20))
+        max_y = int(random_joint[1] + (shape[1]/20))
+        #Thresholding at zero
+        if min_x < 0:
+            min_x = 0
+        if min_y < 0:
+            min_y = 0
+        #We want occlusion to be black
+        color = (0, 0, 0)
+        cv.rectangle(img_d, (min_x, min_y), (max_x, max_y), color, thickness = -1)
+    return img_d
 
 
 def get_roi(img_r, img_d, joint):
@@ -44,20 +66,20 @@ def get_roi(img_r, img_d, joint):
 
     width = (max_x - min_x)
     height = (max_y - min_y)
-    ext_width = width * 1.5
-    ext_height = height * 1.5
+    ext_width = width * 2
+    ext_height = height * 2
 
     st_y = min_y + height / 2 - ext_height / 2
     st_y = st_y if st_y > 0 else 0
 
     en_y = min_y + height / 2 + ext_height / 2
-    en_y = en_y if en_y > 0 else img_r.shape[0]
+    en_y = en_y if en_y < img_r.shape[0] else img_r.shape[0]
 
     st_x = min_x + width / 2 - ext_width / 2
     st_x = st_x if st_x > 0 else 0
 
     en_x = min_x + width / 2 + ext_width / 2
-    en_x = en_x if en_x > 0 else img_r.shape[1]
+    en_x = en_x if en_x < img_r.shape[1] else img_r.shape[1]
     img_r = img_r[st_y:en_y, st_x:en_x]
     img_d = img_d[st_y:en_y, st_x:en_x]
     return img_r, img_d, (st_x, st_y), (en_x - st_x, en_y - st_y)
@@ -67,7 +89,6 @@ def get_target_joints(joint, lt, shape):
     joint_pos = np.asarray(joint).reshape((15, 2))
     joint_pos -= np.array([lt[0], lt[1]])
     joint_pos /= np.array([shape[0], shape[1]])
-
     return joint_pos
 
 
@@ -86,6 +107,8 @@ def save_crop_images_and_joints():
     rgb_image_mat = []
     rgb_occ_mat = []
     d_image_mat = []
+    d_occ_mat = []
+    mat_joints = []
 
     for joint in joints:
         img_r = cv.imread(img_dir+'/'+ joint[0] + '_R.jpg')
@@ -94,13 +117,15 @@ def save_crop_images_and_joints():
         img_r, img_d, lt, shape = get_roi(img_r, img_d, joint[1:])
         joint_pos = get_target_joints(joint[1:], lt, shape)
         img_occ = add_random_occlusion(img_r, joint_pos, shape)
+        d_occ = depth_random_occlusion(img_d, joint_pos, shape)
 
         if np.all(joint_pos > 0):
             img_r = cv.resize(img_r, (60, 90))
             img_d = cv.resize(img_d, (60, 90))
             img_occ = cv.resize(img_occ, (60, 90))
+            d_occ = cv.resize(d_occ, (60, 90))
             #cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_R.jpg', img_r)
-            cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_D.jpg', img_d)
+            cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_D.jpg', d_occ)
             cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_OCC.jpg', img_occ)
 
             #Flatten the RGB original(and resized) image to be stored as mat file
@@ -122,19 +147,28 @@ def save_crop_images_and_joints():
             flat_img_d = np.ravel(array_img_d)
             d_image_mat.append(list(flat_img_d))
 
-
+            #Flatten the D image to be stored as mat file
+            d_occ = cv.cvtColor(d_occ, cv.COLOR_BGR2GRAY)
+            array_d_occ = np.array(d_occ)
+            flat_d_occ = np.ravel(array_d_occ)
+            d_occ_mat.append(list(flat_d_occ))
+            
             for j in joint_pos:
                 p = (int(j[0] * 60), int(j[1] * 90))
-                cv.circle(img_r, p, 5, (0, 0, 255), -1)
+                cv.circle(img_r, p, 3, (0, 0, 255), -1)
             cv.imwrite('data/cad60_dataset/mark/'+joint[0]+'_R.jpg', img_r)
-            joint_pos = joint_pos.flatten()
-            np.save('data/cad60_dataset/joint/'+joint[0], joint_pos)
+            joint_pos_flat = joint_pos.flatten()
+            np.save('data/cad60_dataset/joint/'+joint[0], joint_pos_flat)
 
+            chain_mix = list(joint_pos_flat)
+            chain = [int(joint[0])] + chain_mix
+            mat_joints.append(chain)
+ 
     sio.savemat('data/cad60_dataset/rgb_orig.mat', {'rgb_orig':rgb_image_mat})#Store as mat
     sio.savemat('data/cad60_dataset/rgb_occ.mat', {'rgb_occ':rgb_occ_mat})#Store as mat
-    sio.savemat('data/cad60_dataset/d_occ.mat', {'d_occ':d_image_mat})#Store as mat
-
-
+    sio.savemat('data/cad60_dataset/d_orig.mat', {'d_orig':d_image_mat})#Store as mat
+    sio.savemat('data/cad60_dataset/d_occ.mat', {'d_occ':d_occ_mat})#Store as mat
+    sio.savemat('data/cad60_dataset/joints.mat', {'joints':mat_joints})#Store as mat
 
 if __name__ == '__main__':
     save_crop_images_and_joints()

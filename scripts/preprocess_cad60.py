@@ -53,25 +53,28 @@ def extract_images_and_matricize_keypoints():
 
     if not os.path.exists('data/cad60_dataset/images'):
         os.mkdir('data/cad60_dataset/images')
- 
+
+    g_file_num = 0 
     for subdir in subdir_list:
         if not (subdir == 'images' or subdir == 'mark' or subdir == 'crop'
             or subdir == 'joint'):
+            #Record the number of files (Depth OR RGB) in the folder
+            num_files_in_folder = int(len(os.listdir(dat_dir+'/'+subdir))/2)
+            print "Extracting files from dir: {}".format(subdir)
+            print "Number of files in the current folder:{}".format(
+                    num_files_in_folder)
             for filename in os.listdir(dat_dir+'/'+subdir):
-                file_num = filename[filename.find("_")+1:filename.find(".")]
+                file_num = g_file_num + int(
+                    filename[filename.find("_")+1:filename.find(".")])
                 file_type = filename[0] #R(GB) or D
                 #Uncomment following line(and comment line below that one) 
                 #if USING MULTIPLE DIRECTORIES from the CAD 60 dataset.
                 #os.rename(dat_dir+'/'+subdir+'/'+filename,
                         #dat_dir+'/images/'+subdir+file_num+'_'+file_type+'.jpg') 
                 os.rename(dat_dir+'/'+subdir+'/'+filename,
-                        dat_dir+'/images/'+file_num+'_'+file_type+'.jpg') 
- 
-            os.rmdir(dat_dir+'/'+subdir)
+                        dat_dir+'/images/'+str(file_num)+'_'+file_type+'.jpg') 
+            print "Finished adding all files. Now extracting joint info"
 
-    if not (subdir == 'images' or subdir == 'mark' or subdir == 'crop'
-            or subdir == 'joint'):
-        for subdir in subdir_list:
             with open(dat_dir+'/'+subdir+'.txt', 'rU') as txt_file:
                 lines_list = txt_file.read()
             lines_list = lines_list.split('\n')[:-1]
@@ -91,18 +94,25 @@ def extract_images_and_matricize_keypoints():
                             remove_orientations_and_make_2d(joint_row[1:]))
                     #MATLAB Stuff
                     chain_mix = list(joint_row_norm)
-                    chain_mix[0] = [float(chain_mix[0])]
+                    chain_mix[0] = [g_file_num + int(chain_mix[0])]
                     chain = [item for sublist in chain_mix for item in sublist]
                     mat_joints.append(chain)
                     #Pickle Stuff
                     #joint_row[0] = subdir+joint_row[0]#UNCOMMENT if multiple 
                     #directories of CAD60 dataset
+                    joint_row[0] = str(chain_mix[0][0])#Since chain_mix[0] is a list
                     joints.append(joint_row)
                 else:
                     continue
 
+            print "Joint number is at {} = Number of files handled?".format(
+                    chain_mix[0])
+            g_file_num += num_files_in_folder
+            os.rmdir(dat_dir+'/'+subdir)
+            print "Number of files handled: {}".format(g_file_num)
+
         pkl.dump(joints, open(dat_dir+'/joints.p', 'wb'))
-        sio.savemat(dat_dir+'/joints.mat', {'joints':mat_joints})#Store as mat
+        #sio.savemat(dat_dir+'/joints.mat', {'joints':mat_joints})#Store as mat
 
 if __name__ == '__main__':
     extract_images_and_matricize_keypoints()
