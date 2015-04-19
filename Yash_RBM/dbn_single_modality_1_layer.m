@@ -22,12 +22,12 @@ close all
 clc
 
 maxepoch=10; %Number of epochs 
-numhid=7000; 
+numhid=30; 
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
+%prep_data;
 
-
-fprintf(1,'Pretraining a 4 layer DBN. \n');
+fprintf(1,'Pretraining a 1 layer RBM. \n');
 fprintf(1,'This uses %3i epochs\n', maxepoch);
 
 makebatches;

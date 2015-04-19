@@ -22,10 +22,10 @@ close all
 clc
 
 maxepoch=10; %Number of epochs 
-numhid=8100; numpen=4050; numpen2=2000; numopen=1700;%RGB
+numhid=8100; numpen=4050; numpen2=2000; numopen=500;%RGB
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
-
+%prep_data;
 
 fprintf(1,'Pretraining a 4 layer DBN. \n');
 fprintf(1,'This uses %3i epochs\n', maxepoch);

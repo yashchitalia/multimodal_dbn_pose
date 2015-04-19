@@ -14,34 +14,59 @@
 % Code modified for pose estimation autoencoders by Yash Chitalia
 
 
-rgborig=[]; 
+rgbtrain=[]; 
 targets=[]; 
-load rgb_orig; rgborig = [rgborig; rgb_orig];
-load joints; 
-targets = [targets; joints(:, 2:end)]; 
-rgborig = rgborig/255;
+load prepped_data; rgbtrain = [rgbtrain; rgb_train]; 
+targets = [targets; targets_train]; 
 
-totnum=size(rgborig,1);
+totnum=size(rgbtrain,1);
 fprintf(1, 'Size of the training dataset= %5d \n', totnum);
 
 rand('state',0); %so we know the permutation of the training data
 randomorder=randperm(totnum);
 
 numbatches=totnum/100;
-numdims  =  size(rgborig,2);
+numdims  =  size(rgbtrain,2);
 batchsize = 100;
 batchdata = zeros(batchsize, numdims, numbatches);
 batchtargets = zeros(batchsize, 30, numbatches);
 
 for b=1:numbatches
-  batchdata(:,:,b) = rgborig(randomorder(1+(b-1)*batchsize:b*batchsize), :);
+  batchdata(:,:,b) = rgbtrain(randomorder(1+(b-1)*batchsize:b*batchsize), :);
   batchtargets(:,:,b) = targets(randomorder(1+(b-1)*batchsize:b*batchsize), :);
 end;
-clear rgborig;
+clear rgbtrain targets;
 
 %%% Reset random seeds 
 rand('state',sum(100*clock)); 
 randn('state',sum(100*clock)); 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%TEST STUFF%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rgbtest=[]; 
+targets=[];
+rgbtest = [rgbtest; rgb_test]; 
+targets = [targets; targets_test]; 
 
+
+
+totnum=size(rgbtest,1);
+fprintf(1, 'Size of the test dataset= %5d \n', totnum);
+
+rand('state',0); %so we know the permutation of the training data
+randomorder=randperm(totnum);
+
+numbatches=totnum/100;
+numdims  =  size(rgbtest,2);
+batchsize = 100;
+testbatchdata = zeros(batchsize, numdims, numbatches);
+testbatchtargets = zeros(batchsize, 30, numbatches);
+
+for b=1:numbatches
+  testbatchdata(:,:,b) = rgbtest(randomorder(1+(b-1)*batchsize:b*batchsize), :);
+  testbatchtargets(:,:,b) = targets(randomorder(1+(b-1)*batchsize:b*batchsize), :);
+end;
+clear rgbtest targets;
+%%% Reset random seeds 
+rand('state',sum(100*clock)); 
+randn('state',sum(100*clock)); 
 
 

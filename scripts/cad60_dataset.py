@@ -168,7 +168,7 @@ def save_crop_images_and_joints():
     sio.savemat('data/cad60_dataset/rgb_occ.mat', {'rgb_occ':rgb_occ_mat})#Store as mat
     sio.savemat('data/cad60_dataset/d_orig.mat', {'d_orig':d_image_mat})#Store as mat
     sio.savemat('data/cad60_dataset/d_occ.mat', {'d_occ':d_occ_mat})#Store as mat
-    sio.savemat('data/cad60_dataset/joints.mat', {'joints':mat_joints})#Store as mat
+    sio.savemat('data/cad60_dataset/joints_orig.mat', {'joints_orig':mat_joints})#Store as mat
 
 if __name__ == '__main__':
     save_crop_images_and_joints()
