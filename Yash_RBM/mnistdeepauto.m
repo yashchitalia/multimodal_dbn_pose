@@ -26,7 +26,7 @@ numhid=8100; numpen=4050; numpen2=2000; numopen=30;%RGB
 %numhid=2500; numpen=1250; numpen2=700; numopen=100; %Depth
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
-% converter; 
+%prep_data;
 
 fprintf(1,'Pretraining a deep autoencoder. \n');
 fprintf(1,'This uses %3i epochs\n', maxepoch);
@@ -35,13 +35,35 @@ makebatches;
 [numcases numdims numbatches]=size(batchdata);
 
 fprintf(1,'Pretraining Layer 1 with RBM: %d-%d \n',numdims,numhid);
+% restart=1;
+% rbm;
+% hidrecbiases=hidbiases; 
+% save mnistvh vishid hidrecbiases visbiases;
+rbm1 = randRBM( numdims, numhid, 'GBDBN' );
+opts.BatchSize = numcases;
+opts.MaxIter = maxepoch;
+opts.Verbose = true;
+opts.StepRatio = 0.1;
+X = [];
+for i = 1:numbatches
+    X = [X; batchdata(:,:,i)];
+end
 restart=1;
-rbm;
-hidrecbiases=hidbiases; 
+opts.object = 'CrossEntropy';
+rbm1 = pretrainRBM(rbm1, X, opts);
+vishid = rbm1.W;
+hidrecbiases = rbm1.b;
+visbiases = rbm1.c;
+X = v2h(rbm1, X);
+batchposhidprobs2 = [];
+for b=1:numbatches
+  batchposhidprobs2(:,:,b) = X((1+(b-1)*numcases:b*numcases), :);
+end;
 save mnistvh vishid hidrecbiases visbiases;
 
+
 fprintf(1,'\nPretraining Layer 2 with RBM: %d-%d \n',numhid,numpen);
-batchdata=batchposhidprobs;
+batchdata=batchposhidprobs2;
 numhid=numpen;
 restart=1;
 rbm;

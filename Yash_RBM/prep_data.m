@@ -27,19 +27,19 @@ load joints_orig; jointsorig = [jointsorig; joints_orig(:, 2:end)];
 rand('state',0); %so we know the permutation of the training data
 
 randomtraintest=randperm(size(rgborig,1));
-randomtrain_order = randomtraintest(1:1200);
-randomtest_order = randomtraintest(1201:1500);
+randomtrain_order = randomtraintest(1:3600);
+randomtest_order = randomtraintest(3601:3900);
 
-for b=1:1000
+for b=1:3600
     rgb_train = [rgb_train; rgborig(randomtrain_order(b),:)];
     d_train = [d_train; dorig(randomtrain_order(b),:)];
     targets_train = [targets_train; jointsorig(randomtrain_order(b),:)];
 end
-for b=1001:1200
-    rgb_train = [rgb_train; rgborig(randomtrain_order(b),:)];
-    d_train = [d_train; dorig(randomtrain_order(b),:)];
-    targets_train = [targets_train; jointsorig(randomtrain_order(b),:)];
-end
+% for b=1001:1200
+%     rgb_train = [rgb_train; rgborig(randomtrain_order(b),:)];
+%     d_train = [d_train; dorig(randomtrain_order(b),:)];
+%     targets_train = [targets_train; jointsorig(randomtrain_order(b),:)];
+% end
 rgb_train = rgb_train/255;
 d_train = d_train/255;
 

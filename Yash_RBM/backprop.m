@@ -81,7 +81,7 @@ N=numcases;
 %%%% DISPLAY FIGURE TOP ROW REAL DATA BOTTOM ROW RECONSTRUCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'Displaying in figure 1: Top row - real data, Bottom row -- reconstructions \n');
 output=[];
- for ii=1:20
+ for ii=1:2
   output = [output data(ii,1:end-1)' dataout(ii,:)'];
  end
    if epoch==1 

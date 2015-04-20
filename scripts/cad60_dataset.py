@@ -112,7 +112,8 @@ def save_crop_images_and_joints():
 
     for joint in joints:
         img_r = cv.imread(img_dir+'/'+ joint[0] + '_R.jpg')
-        img_d = cv.imread(img_dir+'/'+ joint[0] + '_D.jpg')
+        img_d = cv.imread(img_dir+'/'+ joint[0] + '_D.jpg',cv.IMREAD_UNCHANGED)	#~NA preserve format of image
+	img_d = 255.0*img_d/(img_d.max())#~NA Normalize image
         print joint[0]
         img_r, img_d, lt, shape = get_roi(img_r, img_d, joint[1:])
         joint_pos = get_target_joints(joint[1:], lt, shape)
@@ -142,15 +143,15 @@ def save_crop_images_and_joints():
             rgb_occ_mat.append(list(flat_img_occ))
 
             #Flatten the D image to be stored as mat file
-            img_d = cv.cvtColor(img_d, cv.COLOR_BGR2GRAY)
+            #img_d = cv.cvtColor(img_d, cv.COLOR_BGR2GRAY)#~NA no need
             array_img_d = np.array(img_d)
-            flat_img_d = np.ravel(array_img_d)
+            flat_img_d = np.uint8(np.round(np.ravel(array_img_d)))#~NA convert to integer
             d_image_mat.append(list(flat_img_d))
 
             #Flatten the D image to be stored as mat file
-            d_occ = cv.cvtColor(d_occ, cv.COLOR_BGR2GRAY)
+            #d_occ = cv.cvtColor(d_occ, cv.COLOR_BGR2GRAY)#~NA no need
             array_d_occ = np.array(d_occ)
-            flat_d_occ = np.ravel(array_d_occ)
+            flat_d_occ = np.uint8(np.round(np.ravel(array_d_occ)))#~NA convert to integer
             d_occ_mat.append(list(flat_d_occ))
             
             for j in joint_pos:

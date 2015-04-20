@@ -22,21 +22,36 @@ close all
 clc
 
 maxepoch=10; %Number of epochs 
-numhid=30; 
+numhid= 2700; 
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
-%prep_data;
+prep_data;
 
 fprintf(1,'Pretraining a 1 layer RBM. \n');
 fprintf(1,'This uses %3i epochs\n', maxepoch);
 
-makebatches;
-[numcases numdims numbatches]=size(batchdata);
+makebatches_d;
+%makebatches_rgb;
 
+[numcases numdims numbatches]=size(batchdata);
 fprintf(1,'Pretraining Layer 1 with RBM: %d-%d \n',numdims,numhid);
+rbm1 = randRBM( numdims, numhid, 'GBDBN' );
+opts.BatchSize = numcases;
+opts.MaxIter = maxepoch;
+opts.Verbose = true;
+opts.StepRatio = 0.1;
+X = [];
+for i = 1:numbatches
+    X = [X; batchdata(:,:,i)];
+end
 restart=1;
-rbm;
-hidrecbiases=hidbiases; 
+%rbm;
+%hidrecbiases=hidbiases; 
+opts.object = 'CrossEntropy';
+rbm1 = pretrainRBM(rbm1, X, opts);
+vishid = rbm1.W;
+hidrecbiases = rbm1.b;
+visbiases = rbm1.c;
 save dbn1vh vishid hidrecbiases visbiases;
 
 

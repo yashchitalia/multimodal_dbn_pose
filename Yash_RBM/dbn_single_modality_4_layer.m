@@ -22,25 +22,49 @@ close all
 clc
 
 maxepoch=10; %Number of epochs 
-numhid=8100; numpen=4050; numpen2=2000; numopen=500;%RGB
+numhid=2700; numpen=1500; numpen2=750; numopen=30;%RGB
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
-%prep_data;
+prep_data;
 
 fprintf(1,'Pretraining a 4 layer DBN. \n');
 fprintf(1,'This uses %3i epochs\n', maxepoch);
 
-makebatches;
+makebatches_rgb;
+%makebatches_d;
+
 [numcases numdims numbatches]=size(batchdata);
 
 fprintf(1,'Pretraining Layer 1 with RBM: %d-%d \n',numdims,numhid);
+% restart=1;
+% rbm;
+% hidrecbiases=hidbiases; 
+% save dbn4vh vishid hidrecbiases visbiases;
+rbm1 = randRBM( numdims, numhid, 'GBDBN' );
+opts.BatchSize = numcases;
+opts.MaxIter = maxepoch;
+opts.Verbose = true;
+opts.StepRatio = 0.1;
+X = [];
+for i = 1:numbatches
+    X = [X; batchdata(:,:,i)];
+end
 restart=1;
-rbm;
-hidrecbiases=hidbiases; 
+opts.object = 'CrossEntropy';
+rbm1 = pretrainRBM(rbm1, X, opts);
+vishid = rbm1.W;
+hidrecbiases = rbm1.b;
+visbiases = rbm1.c;
+X = v2h(rbm1, X);
+batchposhidprobs2 = [];
+for b=1:numbatches
+  batchposhidprobs2(:,:,b) = X((1+(b-1)*numcases:b*numcases), :);
+end;
+
 save dbn4vh vishid hidrecbiases visbiases;
 
 fprintf(1,'\nPretraining Layer 2 with RBM: %d-%d \n',numhid,numpen);
-batchdata=batchposhidprobs;
+batchdata=batchposhidprobs2;
 numhid=numpen;
 restart=1;
 rbm;
