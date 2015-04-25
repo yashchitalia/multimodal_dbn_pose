@@ -22,7 +22,7 @@ targets = [targets; targets_train];
 totnum=size(rgbtrain,1);
 fprintf(1, 'Size of the training dataset= %5d \n', totnum);
 
-rand('state',0); %so we know the permutation of the training data
+% rand('state',0); %so we know the permutation of the training data
 randomorder=randperm(totnum);
 
 numbatches=totnum/100;
@@ -42,8 +42,10 @@ rand('state',sum(100*clock));
 randn('state',sum(100*clock)); 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%TEST STUFF%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rgbtest=[]; 
+rgbvis = [];
 targets=[];
 rgbtest = [rgbtest; rgb_test]; 
+rgbvis = [rgbvis; rgb_test_orig];
 targets = [targets; targets_test]; 
 
 
@@ -58,15 +60,14 @@ numbatches=totnum/100;
 numdims  =  size(rgbtest,2);
 batchsize = 100;
 testbatchdata = zeros(batchsize, numdims, numbatches);
+visbatchdata = zeros(batchsize, numdims, numbatches);
 testbatchtargets = zeros(batchsize, 30, numbatches);
 
 for b=1:numbatches
   testbatchdata(:,:,b) = rgbtest(randomorder(1+(b-1)*batchsize:b*batchsize), :);
+  visbatchdata(:,:,b) = rgbvis(randomorder(1+(b-1)*batchsize:b*batchsize), :);
   testbatchtargets(:,:,b) = targets(randomorder(1+(b-1)*batchsize:b*batchsize), :);
 end;
 clear rgbtest targets;
-%%% Reset random seeds 
-rand('state',sum(100*clock)); 
-randn('state',sum(100*clock)); 
 
 

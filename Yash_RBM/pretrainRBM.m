@@ -135,7 +135,7 @@ deltaC = zeros(1, dimV);
 if( Verbose ) 
     timer = tic;
 end
-
+free_energy = [];
 for iter=1:MaxIter
 
     
@@ -243,7 +243,13 @@ for iter=1:MaxIter
         estti = (MaxIter-iter) * aveti;
         eststr = datestr(datenum(0,0,0,0,0,estti),'DD:HH:MM:SS');
         
+        vbias_term = sum(((V-repmat(rbm.c, size(V, 1), 1))./(sqrt(2)*repmat(rbm.sig, size(V, 1), 1))).^2, 2);
+        hidden_term = sum(log(ones(size(V*rbm.W)) + exp(V*rbm.W + repmat(rbm.b, size(V,1),1))), 2);
+        free_energy = [free_energy; mean(vbias_term - hidden_term)];
 		fprintf( '%3d : %9.4f %9.4f %9.4f %s\n', iter, rmse, mean(H(:)), aveti, eststr );
+        fprintf( 'Free Energy : %9.4f', free_energy(end));
     end
 end
 
+figure;
+plot(1:MaxIter, free_energy);

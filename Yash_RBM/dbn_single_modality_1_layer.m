@@ -21,11 +21,11 @@ clear all
 close all
 clc
 
-maxepoch=10; %Number of epochs 
-numhid= 2700; 
+maxepoch=20; %Number of epochs 
+numhid= 1000; 
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
-prep_data;
+%prep_data;
 
 fprintf(1,'Pretraining a 1 layer RBM. \n');
 fprintf(1,'This uses %3i epochs\n', maxepoch);
@@ -47,12 +47,13 @@ end
 restart=1;
 %rbm;
 %hidrecbiases=hidbiases; 
+rbm1.sig = std(X);
 opts.object = 'CrossEntropy';
 rbm1 = pretrainRBM(rbm1, X, opts);
 vishid = rbm1.W;
 hidrecbiases = rbm1.b;
 visbiases = rbm1.c;
-save dbn1vh vishid hidrecbiases visbiases;
+save dbn1vh_d vishid hidrecbiases visbiases rbm1;
 
 
 

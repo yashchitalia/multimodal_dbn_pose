@@ -28,7 +28,8 @@ epsilonhb     = 0.1;   % Learning rate for biases of hidden units
 weightcost  = 0.0002;   
 initialmomentum  = 0.5;
 finalmomentum    = 0.9;
-
+wholedata = [];
+free_energy = [];
 [numcases numdims numbatches]=size(batchdata);
 
 if restart ==1,
@@ -58,6 +59,7 @@ for epoch = epoch:maxepoch,
 
 %%%%%%%%% START POSITIVE PHASE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   data = batchdata(:,:,batch);
+  wholedata = [wholedata; data];
   poshidprobs = 1./(1 + exp(-data*vishid - repmat(hidbiases,numcases,1)));    
   batchposhidprobs(:,:,batch)=poshidprobs;
   posprods    = data' * poshidprobs;
@@ -96,6 +98,13 @@ for epoch = epoch:maxepoch,
 
 %%%%%%%%%%%%%%%% END OF UPDATES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-  end
+ end
+  vbias_term = wholedata*visbiases';
+  hidden_term = sum(log(ones(size(wholedata*vishid)) + exp(wholedata*vishid + repmat(hidbiases, size(wholedata,1),1))), 2);
+  free_energy = [free_energy; mean(-vbias_term - hidden_term)];
   fprintf(1, 'epoch %4i error %6.1f  \n', epoch, errsum); 
-end;
+  fprintf( 'Free Energy : %9.4f', free_energy(end));
+end
+
+figure;
+plot(1:maxepoch, free_energy);

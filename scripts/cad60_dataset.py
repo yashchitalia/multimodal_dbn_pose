@@ -8,10 +8,10 @@ import pickle as pkl
 import random
 import scipy.io as sio
 
-def add_random_occlusion(img_r, joint_pos, shape):
+def add_random_occlusion(img_red, joint_pos, shape):
     """Add random occlusion to imitate a person with a blanket.
     Using RGB image and the position of the joints, we will arrive at a
-    (partly) random rectangle that we apply to the img_r image and then return
+    (partly) random rectangle that we apply to the img_reimage and then return
     it."""
     joint_unnorm = joint_pos*np.array([shape[0], shape[1]])
     min_x = int(np.min(joint_unnorm[:, 0]))
@@ -19,28 +19,40 @@ def add_random_occlusion(img_r, joint_pos, shape):
     max_x = int(np.max(joint_unnorm[:, 0]))
     max_y = int(np.max(joint_unnorm[:, 1]))
     #Randomize the shit out of this
-    min_x = random.randint(0, min_x)
-    min_y = random.randint(min_y, min_y + (max_y - min_y)/2)
-    max_x = random.randint(max_x, int(shape[0] - 1))
-    max_y = random.randint(max_y, int(shape[1] - 1))
+    try:
+        min_x = random.randint(0, min_x)
+    except:
+        min_x = 0
+    try:
+        min_y = random.randint(min_y, min_y + (max_y - min_y)/2)
+    except:
+        min_y = min_y
+    try:
+        max_x = random.randint(max_x, int(shape[0] - 1))
+    except:
+        max_x = int(shape[0] -1)
+    try:
+        max_y = random.randint(max_y, int(shape[1] - 1))
+    except:
+        max_y = int(shape[1] - 1)
     color = (random.randint(0, 255), random.randint(0, 255), 
             random.randint(0, 255))
-    cv.rectangle(img_r, (min_x, min_y), (max_x, max_y), color,
+    cv.rectangle(img_red, (min_x, min_y), (max_x, max_y), color,
                 thickness = -1)
-    return img_r
+    return img_red
 
-def depth_random_occlusion(img_d, joint_pos, shape):
+def depth_random_occlusion(img_depth, joint_pos, shape):
     """Add random occlusion to imitate the pressure map of a person.
     Using depth image and the position of the joints, we will arrive at a
-    (partly) random rectangle that we apply to the img_d image and then return
+    (partly) random rectangle that we apply to the img_depth image and then return
     it."""
     joint_unnorm = joint_pos*np.array([shape[0], shape[1]])
     random_joints_list = random.sample(joint_unnorm, random.randint(1, 3))
     for random_joint in random_joints_list:
-        min_x = int(random_joint[0] - (shape[0]/20))
-        min_y = int(random_joint[1] - (shape[1]/20))
-        max_x = int(random_joint[0] + (shape[0]/20))
-        max_y = int(random_joint[1] + (shape[1]/20))
+        min_x = int(random_joint[0] - (shape[0]/5))
+        min_y = int(random_joint[1] - (shape[1]/5))
+        max_x = int(random_joint[0] + (shape[0]/5))
+        max_y = int(random_joint[1] + (shape[1]/5))
         #Thresholding at zero
         if min_x < 0:
             min_x = 0
@@ -48,8 +60,8 @@ def depth_random_occlusion(img_d, joint_pos, shape):
             min_y = 0
         #We want occlusion to be black
         color = (0, 0, 0)
-        cv.rectangle(img_d, (min_x, min_y), (max_x, max_y), color, thickness = -1)
-    return img_d
+        cv.rectangle(img_depth, (min_x, min_y), (max_x, max_y), color, thickness = -1)
+    return img_depth
 
 
 def get_roi(img_r, img_d, joint):
@@ -113,12 +125,12 @@ def save_crop_images_and_joints():
     for joint in joints:
         img_r = cv.imread(img_dir+'/'+ joint[0] + '_R.jpg')
         img_d = cv.imread(img_dir+'/'+ joint[0] + '_D.jpg',cv.IMREAD_UNCHANGED)	#~NA preserve format of image
-	img_d = 255.0*img_d/(img_d.max())#~NA Normalize image
+        img_d = 255.0*img_d/(img_d.max())#~NA Normalize image
         print joint[0]
         img_r, img_d, lt, shape = get_roi(img_r, img_d, joint[1:])
         joint_pos = get_target_joints(joint[1:], lt, shape)
-        img_occ = add_random_occlusion(img_r, joint_pos, shape)
-        d_occ = depth_random_occlusion(img_d, joint_pos, shape)
+        img_occ = add_random_occlusion(img_r.copy(), joint_pos, shape)
+        d_occ = depth_random_occlusion(img_d.copy(), joint_pos, shape)
 
         if np.all(joint_pos > 0):
             img_r = cv.resize(img_r, (60, 90))
@@ -126,7 +138,7 @@ def save_crop_images_and_joints():
             img_occ = cv.resize(img_occ, (60, 90))
             d_occ = cv.resize(d_occ, (60, 90))
             #cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_R.jpg', img_r)
-            cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_D.jpg', d_occ)
+            #cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_D.jpg', d_occ)
             cv.imwrite('data/cad60_dataset/crop/'+joint[0]+'_OCC.jpg', img_occ)
 
             #Flatten the RGB original(and resized) image to be stored as mat file
@@ -157,9 +169,9 @@ def save_crop_images_and_joints():
             for j in joint_pos:
                 p = (int(j[0] * 60), int(j[1] * 90))
                 cv.circle(img_r, p, 3, (0, 0, 255), -1)
-            cv.imwrite('data/cad60_dataset/mark/'+joint[0]+'_R.jpg', img_r)
+            #cv.imwrite('data/cad60_dataset/mark/'+joint[0]+'_R.jpg', img_r)
             joint_pos_flat = joint_pos.flatten()
-            np.save('data/cad60_dataset/joint/'+joint[0], joint_pos_flat)
+            #np.save('data/cad60_dataset/joint/'+joint[0], joint_pos_flat)
 
             chain_mix = list(joint_pos_flat)
             chain = [int(joint[0])] + chain_mix

@@ -26,7 +26,7 @@ load mnisthp
 load mnisthp2
 load mnistpo 
 
-makebatches;
+makebatches_rgb;
 [numcases numdims numbatches]=size(batchdata);
 N=numcases; 
 
@@ -63,6 +63,7 @@ err=0;
 N=numcases;
  for batch = 1:numbatches
   data = [batchdata(:,:,batch)];
+  data = bsxfun(@rdivide, data, rbm1.sig );
   data = [data ones(N,1)];
   w1probs = 1./(1 + exp(-data*w1)); w1probs = [w1probs  ones(N,1)];
   w2probs = 1./(1 + exp(-w1probs*w2)); w2probs = [w2probs ones(N,1)];
@@ -81,7 +82,7 @@ N=numcases;
 %%%% DISPLAY FIGURE TOP ROW REAL DATA BOTTOM ROW RECONSTRUCTIONS %%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'Displaying in figure 1: Top row - real data, Bottom row -- reconstructions \n');
 output=[];
- for ii=1:2
+ for ii=1:3
   output = [output data(ii,1:end-1)' dataout(ii,:)'];
  end
    if epoch==1 
@@ -90,7 +91,7 @@ output=[];
    else 
    figure(1)
    end 
-   mnistdisp(output);
+   cad60disp(output);
    drawnow;
 
 %%%%%%%%%%%%%%%%%%%% COMPUTE TRAINING  ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -125,7 +126,7 @@ fprintf(1,'Before epoch %d Train squared error: %6.3f \t \t \n',epoch,train_err(
 %%%%%%%%%%% COMBINE 10 MINIBATCHES INTO 1 LARGER MINIBATCH %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  tt=tt+1; 
  data=[];
- for kk=1:10
+ for kk=1:12
   data=[data 
         batchdata(:,:,(tt-1)*10+kk)]; 
  end 
@@ -137,7 +138,7 @@ fprintf(1,'Before epoch %d Train squared error: %6.3f \t \t \n',epoch,train_err(
 
   [X, fX] = minimize(VV,'CG_MNIST',max_iter,Dim,data);
 
-  w1 = reshape(X(1:(jjkkkkjjl1+1)*l2),l1+1,l2);
+  w1 = reshape(X(1:(l1+1)*l2),l1+1,l2);
   xxx = (l1+1)*l2;
   w2 = reshape(X(xxx+1:xxx+(l2+1)*l3),l2+1,l3);
   xxx = xxx+(l2+1)*l3;

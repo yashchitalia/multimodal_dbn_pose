@@ -49,21 +49,25 @@ err=0;
 [numcases numdims numbatches]=size(batchdata);
 N=numcases*numbatches;
 dataout = [];
+totaldata = [];
+
 Y = [];
 for batch = 1:numbatches
   data = [batchdata(:,:,batch)];
+  data = bsxfun(@rdivide, data, rbm1.sig );
   data = [data ones(numcases,1)];
   w1probs = 1./(1 + exp(-data*w1)); w1probs = [w1probs  ones(numcases,1)];
   w2probs = 1./(1 + exp(-w1probs*w2)); w2probs = [w2probs ones(numcases,1)];
   w3probs = 1./(1 + exp(-w2probs*w3)); w3probs = [w3probs  ones(numcases,1)];
   dataout = [dataout; w3probs*w4];
+  totaldata = [totaldata; data];
   Y = [Y; batchtargets(:, :, batch)]; %This needs to be done since we shuffled the data
 end
 %%%%%%%%%%%%%% COMPUTE LINEAR REGRESSION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 X1 = [ones(size(dataout, 1), 1) dataout]; %Input to Linear regression
 B_est = X1\Y;                                % Estimate parameters
 
-train_err = (1/N)*sum(sum( (Y-X1*B_est).^2 ));
+train_err = compute_error(Y, X1*B_est);
 %%%%%%%%%%%%%% END OF COMPUTING TRAINING RECONSTRUCTION ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% COMPUTE TRAINING  ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'Train squared error: %6.3f \t \t \n', train_err);
@@ -74,14 +78,17 @@ N=testnumcases*testnumbatches;
 
 Y_t = [];
 dataout = [];
+totaldata = [];
 
 for batch = 1:testnumbatches
   data = [testbatchdata(:,:,batch)];
+  data = bsxfun(@rdivide, data, rbm1.sig );
   data = [data ones(testnumcases,1)];
   w1probs = 1./(1 + exp(-data*w1)); w1probs = [w1probs  ones(numcases,1)];
   w2probs = 1./(1 + exp(-w1probs*w2)); w2probs = [w2probs ones(numcases,1)];
   w3probs = 1./(1 + exp(-w2probs*w3)); w3probs = [w3probs  ones(numcases,1)];
   dataout = [dataout; w3probs*w4];
+  totaldata = [totaldata; data];
   Y_t = [Y_t; testbatchtargets(:,:,batch)];
 end
 
@@ -89,8 +96,9 @@ end
 X2 = [ones(size(dataout, 1), 1) dataout]; %Input to Linear regression
 B_est_test = X2\Y_t;                                % Estimate parameters
 
-test_err = (1/N)*sum(sum( (Y_t-X2*B_est).^2 ));
-
+test_err = compute_error(Y_t, X2*B_est);
+visualize_output(totaldata(:,1:end-1),  Y_t);
+visualize_output(totaldata(:,1:end-1),  X2*B_est);
 fprintf(1,'Train squared error: %6.3f Test squared error: %6.3f \t \t \n',train_err,test_err);
 
 

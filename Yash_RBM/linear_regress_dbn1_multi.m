@@ -54,8 +54,10 @@ dataout = [];
 Y = [];
 for batch = 1:numbatches
   data_d = [batchdata_d(:,:,batch)];
+  data_d = bsxfun(@rdivide, data_d, rbm1.sig );
   data_d = [data_d ones(numcases,1)];
   data_r = [batchdata_r(:,:,batch)];
+  data_r = bsxfun(@rdivide, data_r, rbm2.sig );
   data_r = [data_r ones(numcases,1)];
   w1probs = 1./(1 + exp(-data_d*w1)); 
   w2probs = 1./(1 + exp(-data_r*w2)); 
@@ -66,8 +68,11 @@ end
 %%%%%%%%%%%%%% COMPUTE LINEAR REGRESSION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 X1 = [ones(size(dataout, 1), 1) dataout]; %Input to Linear regression
 B_est = X1\Y;                                % Estimate parameters
+Yest = X1*B_est;
+Yest(Yest<0) = 0;
+Yest(Yest>1) = 1;
 
-train_err = (1/N)*sum(sum( (Y-X1*B_est).^2 ));
+train_err = compute_error(Y, Yest);
 %%%%%%%%%%%%%% END OF COMPUTING TRAINING RECONSTRUCTION ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% COMPUTE TRAINING  ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'Train squared error: %6.3f \t \t \n', train_err);
@@ -78,16 +83,24 @@ N=testnumcases*testnumbatches;
 
 Y_t = [];
 dataout = [];
+totaldata = [];
+totaldata_orig = [];
 
 for batch = 1:testnumbatches
   data_d = [testbatchdata_d(:,:,batch)];
+  data_d = bsxfun(@rdivide, data_d, rbm1.sig );
   data_d = [data_d ones(numcases,1)];
   data_r = [testbatchdata_r(:,:,batch)];
+  data_orig = [visbatchdata(:,:,batch)]; %Visualization
+  data_r = bsxfun(@rdivide, data_r, rbm2.sig );
   data_r = [data_r ones(numcases,1)];
   w1probs = 1./(1 + exp(-data_d*w1)); 
   w2probs = 1./(1 + exp(-data_r*w2)); 
   w1w2probs = [w1probs w2probs ones(numcases,1)];
   dataout = [dataout; w1w2probs*w3];
+  totaldata_orig = [totaldata_orig; data_orig];
+  totaldata = [totaldata; data_r];
+
   Y_t = [Y_t; testbatchtargets(:,:,batch)];
 end
 
@@ -95,11 +108,15 @@ end
 X2 = [ones(size(dataout, 1), 1) dataout]; %Input to Linear regression
 B_est_test = X2\Y_t;                                % Estimate parameters
 
-test_err = (1/N)*sum(sum( (Y_t-X2*B_est).^2 ));
+Yt_est = X2*B_est;
+Yt_est(Yt_est<0) = 0;
+Yt_est(Yt_est>1) = 1;
+
+test_err = compute_error(Y_t, Yt_est);
 
 fprintf(1,'Train squared error: %6.3f Test squared error: %6.3f \t \t \n',train_err,test_err);
-
-
+visualize_output(totaldata_orig,  Y_t);
+visualize_output(totaldata(:,1:end-1),  Yt_est);
 
 %%%%%%%%%%%%%%% END OF CONJUGATE GRADIENT WITH 3 LINESEARCHES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

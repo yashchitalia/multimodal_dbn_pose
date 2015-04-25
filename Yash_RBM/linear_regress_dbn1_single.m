@@ -16,9 +16,9 @@
 
 maxepoch=2;
 fprintf(1,'\nApplies Linear Regression to the output of each batch. \n');
-fprintf(1,'24 batches of 100 cases each. \n');
+fprintf(1,'Batches of 100 cases each. \n');
 
-load dbn1vh
+load dbn1vh_d
 
 
 makebatches_d;
@@ -39,42 +39,64 @@ err=0;
 N=numcases*numbatches;
 dataout = [];
 Y = [];
+totaldata = [];
+
 for batch = 1:numbatches
   data = [batchdata(:,:,batch)];
+  data = bsxfun(@rdivide, data, rbm1.sig );
   data = [data ones(numcases,1)];
   dataout = [dataout; 1./(1 + exp(-data*w1))]; 
-  %dataout = [dataout; w3probs*w4];
+  totaldata = [totaldata; data];
   Y = [Y; batchtargets(:, :, batch)]; %This needs to be done since we shuffled the data
 end
 %%%%%%%%%%%%%% COMPUTE LINEAR REGRESSION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 X1 = [ones(size(dataout, 1),1) dataout]; %Input to Linear regression
 B_est = X1\Y;                                % Estimate parameters
+Yest = X1*B_est;
+Yest(Yest<0) = 0;
+Yest(Yest>1) = 1;
+train_err = compute_error(Y, Yest);
 
-train_err = (1/N)*sum(sum( (Y-X1*B_est).^2 ));
+
 %%%%%%%%%%%%%% END OF COMPUTING TRAINING RECONSTRUCTION ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% COMPUTE TRAINING  ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf(1,'Train squared error: %6.3f \t \t \n', train_err);
-clear dataout data N;
+clear dataout data N totaldata;
 %%%%%%%%%%%%%%%%%%%% COMPUTE TEST RECONSTRUCTION ERROR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [testnumcases testnumdims testnumbatches]=size(testbatchdata);
 N=testnumcases*testnumbatches;
 
 Y_t = [];
 dataout = [];
-
+totaldata = [];
+totaldata_orig = [];
 for batch = 1:testnumbatches
   data = [testbatchdata(:,:,batch)];
+  data_orig = [visbatchdata(:,:,batch)];
+  data = bsxfun(@rdivide, data, rbm1.sig );
   data = [data ones(testnumcases,1)];
   dataout = [dataout; 1./(1 + exp(-data*w1))];
+  totaldata = [totaldata; data];
+  totaldata_orig = [totaldata_orig; data_orig];
   Y_t = [Y_t; testbatchtargets(:,:,batch)];
 end
 %%%%%%%%%%%%%% COMPUTE LINEAR REGRESSION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 X2 = [ones(size(dataout, 1), 1) dataout]; %Input to Linear regression
 B_est_test = X2\Y_t;                                % Estimate parameters
 
-test_err = (1/N)*sum(sum( (Y_t-X2*B_est).^2 ));
+Yt_est = X2*B_est;
+Yt_est(Yt_est<0) = 0;
+Yt_est(Yt_est>1) = 1;
+test_err = compute_error(Y_t, Yt_est);
+
+
+
+visualize_output(totaldata_orig,  Y_t);
+visualize_output(totaldata(:,1:end-1),  Yt_est);
 
 fprintf(1,'Train squared error: %6.3f Test squared error: %6.3f \t \t \n',train_err,test_err);
+
+
 
 
 
