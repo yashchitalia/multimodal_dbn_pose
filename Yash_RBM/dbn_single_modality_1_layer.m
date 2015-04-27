@@ -21,8 +21,10 @@ clear all
 close all
 clc
 
-maxepoch=20; %Number of epochs 
+maxepoch=30; %Number of epochs 
 numhid= 1000; 
+saved_accuracy = [];
+save saved_rmse_d saved_accuracy;
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
 %prep_data;
@@ -45,8 +47,11 @@ for i = 1:numbatches
     X = [X; batchdata(:,:,i)];
 end
 restart=1;
-%rbm;
-%hidrecbiases=hidbiases; 
+% rbm;
+% hidrecbiases=hidbiases; 
+% rbm1.W = vishid;
+% rbm1.b = hidrecbiases;
+% rbm1.c = visbiases;
 rbm1.sig = std(X);
 opts.object = 'CrossEntropy';
 rbm1 = pretrainRBM(rbm1, X, opts);
@@ -54,8 +59,5 @@ vishid = rbm1.W;
 hidrecbiases = rbm1.b;
 visbiases = rbm1.c;
 save dbn1vh_d vishid hidrecbiases visbiases rbm1;
-
-
-
 linear_regress_dbn1_single; 
 

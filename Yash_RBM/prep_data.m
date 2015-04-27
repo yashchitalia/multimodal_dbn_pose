@@ -42,12 +42,12 @@ randomtraintest=randperm(size(rgborig,1));
 randomtrain_order = randomtraintest(1:19200);
 randomtest_order = randomtraintest(19200:19800);
 
-for b=1:9600
+for b=1:4800
     rgb_train = [rgb_train; rgborig(randomtrain_order(b),:)];
     d_train = [d_train; dorig(randomtrain_order(b),:)];
     targets_train = [targets_train; jointsorig(randomtrain_order(b),:)];
 end
-for b=9601:19200
+for b=4801:9600
     rgb_train = [rgb_train; rgborig(randomtrain_order(b),:)];
     d_train = [d_train; dorig(randomtrain_order(b),:)];
     targets_train = [targets_train; jointsorig(randomtrain_order(b),:)];

@@ -21,15 +21,16 @@ fprintf(1,'36 batches of 100 cases each. \n');
 load mmdbn1vh_d
 load mmdbn1vh_r
 load mmdbn1po 
-
-makebatches_d;
-batchdata_d = batchdata;
-testbatchdata_d = testbatchdata;
-clear batchdata testbatchdata;
-makebatches_rgb;
-batchdata_r = batchdata;
-testbatchdata_r = testbatchdata;
-clear batchdata testbatchdata;
+load batchdata_rgb
+load batchdata_d
+% makebatches_d;
+% batchdata_d = batchdata;
+% testbatchdata_d = testbatchdata;
+% clear batchdata testbatchdata;
+% makebatches_rgb;
+% batchdata_r = batchdata;
+% testbatchdata_r = testbatchdata;
+% clear batchdata testbatchdata;
 %%%% PREINITIALIZE WEIGHTS OF THE AUTOENCODER %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 w1=[mm_vishid_d; mm_hidrecbiases_d];
 w2=[mm_vishid_r; mm_hidrecbiases_r];
@@ -115,12 +116,15 @@ Yt_est(Yt_est>1) = 1;
 test_err = compute_error(Y_t, Yt_est);
 
 fprintf(1,'Train squared error: %6.3f Test squared error: %6.3f \t \t \n',train_err,test_err);
-visualize_output(totaldata_orig,  Y_t);
-visualize_output(totaldata(:,1:end-1),  Yt_est);
+% visualize_output(totaldata_orig,  Y_t);
+% visualize_output(totaldata(:,1:end-1),  Yt_est);
 
 %%%%%%%%%%%%%%% END OF CONJUGATE GRADIENT WITH 3 LINESEARCHES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+% load saved_accuracy_mm;
+% saved_accuracy = [saved_accuracy; [train_err test_err]];
+% 
+% save saved_accuracy_mm saved_accuracy;
 
 
 

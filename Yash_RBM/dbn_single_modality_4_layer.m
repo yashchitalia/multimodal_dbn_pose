@@ -21,17 +21,20 @@ clear all
 close all
 clc
 
-maxepoch=10; %Number of epochs 
-numhid=2700; numpen=1500; numpen2=750; numopen=500;%RGB
+maxepoch=15; %Number of epochs 
+% numhid=2700; numpen=1500; numpen2=750; numopen=500;%RGB
+numhid=1000;numopen=700;%RGB
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
-prep_data;
+% prep_data;
 
 fprintf(1,'Pretraining a 4 layer DBN. \n');
 fprintf(1,'This uses %3i epochs\n', maxepoch);
 
 makebatches_rgb;
 %makebatches_d;
+saved_accuracy = [];
+save saved_rmse_two_layer saved_accuracy;
 
 [numcases numdims numbatches]=size(batchdata);
 
@@ -65,24 +68,24 @@ end;
 
 save dbn4vh vishid hidrecbiases visbiases;
 
-fprintf(1,'\nPretraining Layer 2 with RBM: %d-%d \n',numhid,numpen);
+% fprintf(1,'\nPretraining Layer 2 with RBM: %d-%d \n',numhid,numpen);
+% batchdata=batchposhidprobs2;
+% numhid=numpen;
+% restart=1;
+% rbm;
+% hidpen=vishid; penrecbiases=hidbiases; hidgenbiases=visbiases;
+% save dbn4hp hidpen penrecbiases hidgenbiases;
+% 
+% fprintf(1,'\nPretraining Layer 3 with RBM: %d-%d \n',numpen,numpen2);
+% batchdata=batchposhidprobs;
+% numhid=numpen2;
+% restart=1;
+% rbm;
+% hidpen2=vishid; penrecbiases2=hidbiases; hidgenbiases2=visbiases;
+% save dbn4hp2 hidpen2 penrecbiases2 hidgenbiases2;
+
+fprintf(1,'\nPretraining Layer 2 with RBM: %d-%d \n',numhid,numopen);
 batchdata=batchposhidprobs2;
-numhid=numpen;
-restart=1;
-rbm;
-hidpen=vishid; penrecbiases=hidbiases; hidgenbiases=visbiases;
-save dbn4hp hidpen penrecbiases hidgenbiases;
-
-fprintf(1,'\nPretraining Layer 3 with RBM: %d-%d \n',numpen,numpen2);
-batchdata=batchposhidprobs;
-numhid=numpen2;
-restart=1;
-rbm;
-hidpen2=vishid; penrecbiases2=hidbiases; hidgenbiases2=visbiases;
-save dbn4hp2 hidpen2 penrecbiases2 hidgenbiases2;
-
-fprintf(1,'\nPretraining Layer 4 with RBM: %d-%d \n',numpen2,numopen);
-batchdata=batchposhidprobs;
 numhid=numopen; 
 restart=1;
 rbmhidlinear;

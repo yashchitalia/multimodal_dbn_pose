@@ -14,7 +14,6 @@
 
 % This program perfroms linear regression with the outputs of the DBN layers
 
-maxepoch=2;
 fprintf(1,'\nApplies Linear Regression to the output of each batch. \n');
 fprintf(1,'Batches of 100 cases each. \n');
 
@@ -43,7 +42,7 @@ totaldata = [];
 
 for batch = 1:numbatches
   data = [batchdata(:,:,batch)];
-  data = bsxfun(@rdivide, data, rbm1.sig );
+%   data = bsxfun(@rdivide, data, rbm1.sig );
   data = [data ones(numcases,1)];
   dataout = [dataout; 1./(1 + exp(-data*w1))]; 
   totaldata = [totaldata; data];
@@ -73,7 +72,7 @@ totaldata_orig = [];
 for batch = 1:testnumbatches
   data = [testbatchdata(:,:,batch)];
   data_orig = [visbatchdata(:,:,batch)];
-  data = bsxfun(@rdivide, data, rbm1.sig );
+%   data = bsxfun(@rdivide, data, rbm1.sig );
   data = [data ones(testnumcases,1)];
   dataout = [dataout; 1./(1 + exp(-data*w1))];
   totaldata = [totaldata; data];
@@ -91,13 +90,14 @@ test_err = compute_error(Y_t, Yt_est);
 
 
 
-visualize_output(totaldata_orig,  Y_t);
-visualize_output(totaldata(:,1:end-1),  Yt_est);
+% visualize_output(totaldata_orig,  Y_t);
+% visualize_output(totaldata(:,1:end-1),  Yt_est);
 
 fprintf(1,'Train squared error: %6.3f Test squared error: %6.3f \t \t \n',train_err,test_err);
-
-
-
+% load saved_accuracy;
+% saved_accuracy = [saved_accuracy; [train_err test_err]];
+% 
+% save saved_accuracy saved_accuracy;
 
 
 %%%%%%%%%%%%%%% END OF CONJUGATE GRADIENT WITH 3 LINESEARCHES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%

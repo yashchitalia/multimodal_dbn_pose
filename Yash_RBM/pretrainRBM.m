@@ -224,7 +224,7 @@ for iter=1:MaxIter
 		rbm.W = rbm.W + deltaW - WeightCost * rbm.W;
 		rbm.b = rbm.b + deltaB;
 		rbm.c = rbm.c + deltaC;
-
+        
     end
 
     if( SparseLambda > 0 && strcmpi( 'GBRBM', rbm.type ) )
@@ -248,8 +248,16 @@ for iter=1:MaxIter
         free_energy = [free_energy; mean(vbias_term - hidden_term)];
 		fprintf( '%3d : %9.4f %9.4f %9.4f %s\n', iter, rmse, mean(H(:)), aveti, eststr );
         fprintf( 'Free Energy : %9.4f', free_energy(end));
+%         load saved_rmse_d;
+%         saved_accuracy = [saved_accuracy; rmse];
+%         save saved_rmse_d saved_accuracy;
     end
+%    vishid = rbm.W;
+%    hidrecbiases = rbm.b;
+%    visbiases = rbm.c;
+%   save dbn1vh vishid hidrecbiases visbiases;
+  
 end
 
-figure;
-plot(1:MaxIter, free_energy);
+% figure;
+% plot(1:MaxIter, free_energy);

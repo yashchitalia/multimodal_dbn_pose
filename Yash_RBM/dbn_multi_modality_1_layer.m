@@ -21,10 +21,11 @@ clear all
 close all
 clc
 
-maxepoch=20; %Number of epochs 
-numhid1= 750; 
+maxepoch=15; %Number of epochs 
+numhid1= 1000; 
 numopen = 700;
-
+saved_accuracy = [];
+save saved_rmse_mm saved_accuracy;
 
 fprintf(1,'Make sure all the preprocessed files exist \n');
 %prep_data;
@@ -34,10 +35,13 @@ fprintf(1,'This uses %3i epochs\n', maxepoch);
 %%%%%%%%%%%%%%%%%%%%%%%% FIRST ONE LAYER OF DEPTH %%%%%%%%%%%%%%%%%%%%%%%%%
 makebatches_d;
 %makebatches_rgb;
+batchdata_d = batchdata;
+testbatchdata_d = testbatchdata;
+
 
 [numcases numdims numbatches]=size(batchdata);
 fprintf(1,'Pretraining Layer 1 with D: %d-%d \n',numdims,numhid1);
-rbm1 = randRBM( numdims, numhid1, 'GBDBN' );
+rbm1 = randRBM( numdims, numhid1, 'GBDBN');
 rbm1.sig = std(batchdata);
 opts.BatchSize = numcases;
 opts.MaxIter = maxepoch;
@@ -48,26 +52,32 @@ for i = 1:numbatches
     X = [X; batchdata(:,:,i)];
 end
 restart=1;
-%rbm;
-%hidrecbiases=hidbiases; 
+% rbm;
+% hidrecbiases=hidbiases; 
+% rbm1.W = vishid;
+% rbm1.b = hidrecbiases;
+% rbm1.c = visbiases;
 rbm1.sig = std(X);
 opts.object = 'CrossEntropy';
 rbm1 = pretrainRBM(rbm1, X, opts);
 mm_vishid_d = rbm1.W;
 mm_hidrecbiases_d = rbm1.b;
 mm_visbiases_d = rbm1.c;
-X1 = v2h(rbm1, X);
 save mmdbn1vh_d mm_vishid_d mm_hidrecbiases_d mm_visbiases_d rbm1;
+save batchdata_d batchdata_d testbatchdata_d;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%% NEXT ONE LAYER OF RGB %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 numhid2= 1000; 
 %makebatches_d;
 makebatches_rgb;
+batchdata_r = batchdata;
+testbatchdata_r = testbatchdata;
+
 
 [numcases numdims numbatches]=size(batchdata);
 fprintf(1,'Pretraining Layer 1 with RBM: %d-%d \n',numdims,numhid2);
-rbm2 = randRBM( numdims, numhid2, 'GBDBN' );
+rbm2 = randRBM( numdims, numhid2 , 'GBDBN');
 opts.BatchSize = numcases;
 opts.MaxIter = maxepoch;
 opts.Verbose = true;
@@ -77,20 +87,28 @@ for i = 1:numbatches
     X = [X; batchdata(:,:,i)];
 end
 restart=1;
-%rbm;
-%hidrecbiases=hidbiases; 
+numhid = numhid2;
+% rbm;
+% hidrecbiases=hidbiases; 
+% rbm2.W = vishid;
+% rbm2.b = hidrecbiases;
+% rbm2.c = visbiases;
 rbm2.sig = std(X);
 opts.object = 'CrossEntropy';
 rbm2 = pretrainRBM(rbm2, X, opts);
 mm_vishid_r = rbm2.W;
 mm_hidrecbiases_r = rbm2.b;
 mm_visbiases_r = rbm2.c;
-X2 = v2h(rbm2, X);
 
 save mmdbn1vh_r mm_vishid_r mm_hidrecbiases_r mm_visbiases_r rbm2;
+save batchdata_rgb batchdata_r testbatchdata_r;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% JOIN THE TWO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+X1 = v2h(rbm1, X);
+X2 = v2h(rbm2, X);
+
 X3 = [X1 X2];
 batchposhidprobs2 = [];
 for b=1:numbatches
@@ -101,7 +119,7 @@ end;
 %%%%%%%%%%%%%%%%%%%%%%%% PRETRAIN THE COMBO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fprintf(1,'\nPretraining Layer 2 with RBM: %d-%d \n',numhid1+numhid2,numopen);
-batchdata=batchposhidprobs2;
+batchdata_mm=batchposhidprobs2;
 numhid=numopen;
 restart=1;
 rbmhidlinear;

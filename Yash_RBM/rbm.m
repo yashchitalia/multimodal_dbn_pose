@@ -104,7 +104,11 @@ for epoch = epoch:maxepoch,
   free_energy = [free_energy; mean(-vbias_term - hidden_term)];
   fprintf(1, 'epoch %4i error %6.1f  \n', epoch, errsum); 
   fprintf( 'Free Energy : %9.4f', free_energy(end));
+%%%TEMP CODE ADDED TO PLOT LEARNING CURVES %%%
+%   hidrecbiases = hidbiases;
+%   save dbn1vh_d vishid hidrecbiases visbiases;
+%   linear_regress_dbn1_single; 
+
 end
 
-figure;
-plot(1:maxepoch, free_energy);
+
